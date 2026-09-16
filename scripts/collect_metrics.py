@@ -95,6 +95,14 @@ def scan_run(rd: Path) -> list[CandidateRecord]:
             if m.get("error"):
                 st = STATUS_FAILED
                 err = str(m.get("error"))[:500]
+            # pLDDT: canonical scale is 0-100. ColabDesign's get_plddt() is native 0-1;
+            # notebooks record the conversion in "plddt_scale". Coerce unlabelled legacy
+            # 0-1 values defensively so the CSV stays on a single scale.
+            _plddt = float(m["mean_plddt"]) if m.get("mean_plddt") is not None else None
+            _plddt_scale = m.get("plddt_scale")
+            if _plddt is not None and _plddt_scale is None and 0.0 <= _plddt <= 1.0:
+                _plddt *= 100.0
+                _plddt_scale = "auto_scaled_native_0_1_x100"
             r = CandidateRecord(
                 experiment_name=str(meta.get("experiment_name") or rd.name),
                 run_id=rd.name,
@@ -111,8 +119,11 @@ def scan_run(rd: Path) -> list[CandidateRecord]:
                 mpnn_temperature=float(mpnn_cfg.get("temperature") or 0.0) or None,
                 validation_model=str(val_cfg.get("model") or meta.get("validation_model") or ""),
                 rmsd_angstrom=float(m["rmsd_angstrom"]) if m.get("rmsd_angstrom") is not None else None,
+                rmsd_source=m.get("rmsd_source"),
                 tm_score=float(m["tm_score"]) if m.get("tm_score") is not None else None,
-                mean_plddt=float(m["mean_plddt"]) if m.get("mean_plddt") is not None else None,
+                tm_source=m.get("tm_source"),
+                mean_plddt=_plddt,
+                plddt_scale=_plddt_scale,
                 ptm=float(m["ptm"]) if m.get("ptm") is not None else None,
                 rso_runtime_seconds=float(rso_runtime) if rso_runtime is not None else None,
                 mpnn_runtime_seconds=float(m.get("mpnn_runtime_seconds") or bb_status.get("mpnn_runtime_seconds") or 0) or None,

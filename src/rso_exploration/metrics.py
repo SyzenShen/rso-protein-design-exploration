@@ -46,8 +46,11 @@ class CandidateRecord:
     mpnn_temperature: Optional[float] = None
     validation_model: Optional[str] = None
     rmsd_angstrom: Optional[float] = None
+    rmsd_source: Optional[str] = None
     tm_score: Optional[float] = None
+    tm_source: Optional[str] = None
     mean_plddt: Optional[float] = None
+    plddt_scale: Optional[str] = None
     ptm: Optional[float] = None
     rso_runtime_seconds: Optional[float] = None
     mpnn_runtime_seconds: Optional[float] = None
