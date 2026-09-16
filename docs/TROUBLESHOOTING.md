@@ -43,6 +43,22 @@ The shim is included in the current `notebooks/01_rso_reproduction.ipynb` and `n
 
 ## Stage 1 RSO errors
 
+### `AssertionError: ERROR: no model params defined` / `WARNING: 'model_*_ptm' not found`
+
+AlphaFold parameters are missing. ColabDesign looks for `./params/params_model_*_ptm.npz` relative to the kernel CWD (`/content` on Colab). The current setup cell downloads them automatically; if you used an older notebook copy or skipped that block, run a cell with:
+
+```python
+import os
+os.chdir("/content")
+!mkdir -p params
+!apt-get install -qq aria2
+!aria2c -q -x 16 https://storage.googleapis.com/alphafold/alphafold_params_2022-12-06.tar
+!tar -xf alphafold_params_2022-12-06.tar -C params
+print(sorted(f for f in os.listdir("params") if f.endswith(".npz")))
+```
+
+Expect five `params_model_{1..5}_ptm.npz` files (plus monomer weights), then re-run the RSO cell — no runtime restart needed. The ~3.6 GB archive is gitignored; never commit it.
+
 ### CUDA OOM on length 150+
 
 1. Reduce batch size where possible (RSO hallucination is single-chain; here OOM usually means the runtime has a small GPU).

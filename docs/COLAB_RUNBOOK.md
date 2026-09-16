@@ -46,8 +46,10 @@ Mounting is NOT required to run a short reproduction notebook; it is purely a sa
 The setup cell runs:
 - `git clone https://github.com/sokrypton/ColabDesign.git`
 - `pip install colabdesign ... biopython pyyaml pandas matplotlib seaborn`
+- downloads the official AlphaFold params `alphafold_params_2022-12-06.tar` (~3.6 GB) via `aria2c` and extracts to `/content/params`
+- compiles the Zhang-group `TMscore` binary into `/content/TMscore`
 
-This usually takes 2–5 minutes. Expect several warnings; actual errors with tracebacks should be investigated.
+The pip step usually takes 2–5 minutes; the params download adds 3–10 minutes depending on the Colab network. Expected final lines: `AF2 params: ['params_model_1_ptm.npz', ..., 'params_model_5_ptm.npz', ...]` and `TMscore binary present: True`. Expect several warnings; actual errors with tracebacks should be investigated. If the params step is skipped or interrupted, the first RSO cell fails with `AssertionError: ERROR: no model params defined` — re-run the setup/params cell.
 
 If you want to use YOUR fork's configs/notebooks rather than the shipped notebook-internal defaults, also clone your fork:
 

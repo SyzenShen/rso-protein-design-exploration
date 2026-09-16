@@ -12,9 +12,9 @@ We reproduce the core in silico de novo protein design pipeline reported in Fran
    - Sequence mode at restart: `["gumbel","soft"]`; `rm_aa="C"` (cysteines excluded throughout).
    - Schedule: `design_logits(90)` + `design_logits(10, save_best=True)` = 100 steps. 100 steps matches the paper.
 2. **Stage 2 — ProteinMPNN sequence generation.** Discard the RSO relaxed sequence; feed only the converged backbone Cα trace to `mk_mpnn_model(weights="soluble")`. Sample 8 candidates with `temperature=0.1` and `rm_aa="C"`.
-3. **Stage 3 — Independent structure-prediction validation.** Using `mk_afdesign_model(protocol="fixbb")` with `model_4_ptm` and `num_recycles=3`, predict each of the 8 MPNN sequences from scratch (no MSA, no template). Compute vs. Stage 1 backbone:
-   - **Cα RMSD (Å)** after optimal superposition.
-   - **TM-score** (length-normalized structural similarity 0..1).
+3. **Stage 3 — Independent structure-prediction validation.** Using `mk_afdesign_model(protocol="fixbb", best_metric="rmsd")` with `model_4_ptm` and `num_recycles=3`, predict each of the 8 MPNN sequences from scratch (no MSA, no template), matching the official notebook's `designability_test()` helper. The predicted structure is saved as PDB, then compared to the Stage 1 backbone:
+   - **Cα RMSD (Å)** — primary value is `af_val.aux["log"]["rmsd"]`, the fixbb internally aligned Cα RMSD, i.e. the exact quantity the official `designability_test()` tabulates. Cross-checked by the Zhang `TMscore` executable; a Kabsch-aligned numpy RMSD is the last-resort fallback. Provenance per candidate is written to `rmsd_source`.
+   - **TM-score (0..1, reference-length normalised)** — computed by the official Zhang-group `TMscore` binary (downloaded/compiled in the setup cell exactly as in the official notebook), invoked as `TMscore <predicted.pdb> <designed.pdb>`; native-normalised value parsed from output. Fallback: Zhang TM formula applied after in-notebook Kabsch superposition. Provenance in `tm_source`.
    - **mean pLDDT** (AF2 local confidence 0..100).
    - **pTM** (AF2 predicted TM-score, from model_4_ptm auxiliary log).
 4. **Stage 4 — Ranking.** Rank candidates per-backbone independently by lowest RMSD, highest TM-score, and highest mean pLDDT. No composite ranking is imposed by default; any composite must be documented explicitly.

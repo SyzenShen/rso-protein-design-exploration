@@ -263,7 +263,7 @@ A column-by-column reference with units, valid ranges, and computation methods i
 | `tm_score` | Template Modelling score of the same superposition. Length-normalised, bounded [0, 1]; values > 0.5 are conventionally interpreted as a similar fold. | Dimensionless; [0, 1] |
 | `mean_plddt` | Arithmetic mean of per-residue predicted local distance difference test scores reported internally by the AlphaFold validation model for its own prediction. Note this is a model-confidence score for the prediction, not a measure of agreement with the designed backbone. | Dimensionless; [0, 100] |
 | `ptm` | Predicted TM-score reported internally by `model_4_ptm` for its own prediction. Present only when AF model supports it; NA otherwise. | Dimensionless; [0, 1] |
-| `mpnn_score` | ProteinMPNN total log-odds score of the sampled sequence given the backbone. Higher = more favourable under MPNN's model. | Nats (log-odds); (-inf, +inf) |
+| `mpnn_score` | ProteinMPNN per-residue average negative log-likelihood (`-(S·log q).sum / L`, ColabDesign `mpnn.sample()["score"]`). **Lower = more probable / more favourable** under the MPNN model. | Nats (average cross-entropy); ≥ 0 |
 | `rso_runtime_seconds`, `mpnn_runtime_seconds`, `validation_runtime_seconds`, `total_runtime_seconds` | Elapsed wall-clock time per stage. Sum of per-candidate times for total; recorded by per-stage wrappers on the Colab GPU instance. | Seconds |
 | Provenance columns: `gpu_name`, `peak_gpu_memory_mb`, `colabdesign_commit`, `git_commit` | Captured by `collect_provenance()` at the start of each run. `peak_gpu_memory_mb` is NA if nvidia-smi pmon is unavailable in the runtime. | Mixed |
 
