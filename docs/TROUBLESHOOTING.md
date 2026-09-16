@@ -41,6 +41,25 @@ print("xla_bridge backend:", jax.lib.xla_bridge.get_backend().platform)
 
 The shim is included in the current `notebooks/01_rso_reproduction.ipynb` and `notebooks/02_length_experiment.ipynb` (imports cell, right after the `jax.devices()` print) and must execute before the first `clear_mem()` / `mk_afdesign_model()` call. Expected output: `xla_bridge backend: gpu`.
 
+### `TypeError: clip() got an unexpected keyword argument 'a_max'` in the first RSO compile
+
+JAX 0.11's `jax.numpy.clip(arr, /, min=None, max=None)` removed the NumPy-1-era `a_min`/`a_max` keyword names. ColabDesign's vendored AlphaFold still calls `jnp.clip(x, a_min=..., a_max=...)` at three sites (`colabdesign/af/alphafold/model/modules.py` relative-position encoding — hit on the monomer hallucination path — and two in `modules_multimer.py`). All three sites resolve `jnp.clip` via module globals at call time, so a wrapper installed on the `jax.numpy` module fixes them, including already-imported modules:
+
+```python
+import jax.numpy as jnp
+if not getattr(jnp.clip, "_rso_compat", False):
+    _orig = jnp.clip
+    def _clip_compat(arr, a_min=None, a_max=None, min=None, max=None):
+        if a_min is not None: min = a_min
+        if a_max is not None: max = a_max
+        return _orig(arr, min, max)
+    _clip_compat._rso_compat = True
+    jnp.clip = _clip_compat
+print(jnp.clip(jnp.arange(5), a_max=2))   # [0 1 2 2 2]
+```
+
+The wrapper accepts old kwargs, new kwargs (`min`/`max`) and positional calls (verified by emulation against the JAX 0.11 signature). It is included in the same imports-cell shim block as the `xla_bridge` shim. A repo-wide scan of ColabDesign `main` (`e31a56f`) found no other NumPy-2/JAX-removed API usage beyond these and `xla_bridge`.
+
 ## Stage 1 RSO errors
 
 ### `AssertionError: ERROR: no model params defined` / `WARNING: 'model_*_ptm' not found`

@@ -70,10 +70,17 @@ If a future ColabDesign `main` commit breaks our notebooks (API change):
 
 ### 2026-09-16 — JAX 0.11.1 removes `jax.lib.xla_bridge`; ColabDesign main not yet updated
 
-- Environment: Google Colab T4 runtime, Python 3.12, preinstalled **JAX 0.11.1**.
+- Environment: Google Colab T4 runtime, Python 3.13 (per traceback path `/usr/local/lib/python3.13/dist-packages/`; Colab's exact minor version may differ between sessions), preinstalled **JAX 0.11.1**.
 - Error: `AttributeError: module 'jax.lib' has no attribute 'xla_bridge'` from `colabdesign/shared/utils.py::clear_mem()` (first GPU call).
 - ColabDesign version audited: `main` HEAD `e31a56fe1d9b4de25c8697f3a28b75892941cc72` (cloned 2026-09-16). Full-repo grep confirms the single remaining removed-API usage is `jax.lib.xla_bridge.get_backend()` in that one function. In JAX 0.11.1 the module exists at `jax._src.xla_bridge` with `get_backend()` intact; `jax/lib/__init__.py` only re-exports `version_str`.
 - Resolution chosen: in-notebook compatibility shim that aliases `jax.lib.xla_bridge = jax._src.xla_bridge` when missing, executed before any ColabDesign GPU call. Baked into `notebooks/01_rso_reproduction.ipynb` and `notebooks/02_length_experiment.ipynb` imports cells. Did **not** downgrade JAX (would require matching jaxlib/CUDA pinning on Colab). Details: `docs/TROUBLESHOOTING.md`.
+
+### 2026-09-16 — JAX 0.11 removed `a_min`/`a_max` kwargs from `jnp.clip`; ColabDesign vendored AF not updated
+
+- Error during the first RSO `design_logits` trace: `TypeError: clip() got an unexpected keyword argument 'a_max'`, originating from `colabdesign/af/alphafold/model/modules.py` relative-position encoding (`jnp.clip(offset + max_relative_feature, a_min=0, a_max=...)`).
+- JAX 0.11.1 signature (verified from the wheel `jax/_src/numpy/lax_numpy.py`): `clip(arr, /, min=None, max=None)` — keyword rename from NumPy-1-era `a_min`/`a_max`.
+- ColabDesign `main` (`e31a56f`) uses old kwargs at exactly 3 sites: 1 monomer (`modules.py:1452`, blocks our pipeline), 2 multimer (`modules_multimer.py:245,269`). All import via `import jax.numpy as jnp` and resolve `jnp.clip` as a module global at call time.
+- Resolution: idempotent wrapper installed on the `jax.numpy` module in the imports-cell shim, translating `a_min/a_max` → `min/max` and accepting positional + new-kwarg call styles (all five call styles verified by emulation). No on-disk patching of ColabDesign, so `colabdesign_commit` provenance stays truthful; the shim is recorded here as an environment deviation. Repo-wide scan for other removed APIs (`np.float_`, `np.int_`, `traverse_util`, `DeviceArray`, `host_count`, etc.) was clean.
 
 ### 2026-09-16 — AlphaFold params + metric provenance aligned to official `designability_test()`
 
