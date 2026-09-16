@@ -27,6 +27,20 @@ You have a CPU runtime. Go to **Runtime → Change runtime type → Hardware acc
 
 Either JAX was installed CPU-only, or CUDA is misconfigured. On Colab this almost always resolves by restarting the runtime and rerunning the setup cell (which reinstalls ColabDesign/JAX).
 
+### `AttributeError: module 'jax.lib' has no attribute 'xla_bridge'` in `clear_mem()`
+
+Observed on Colab runtimes preinstalled with **JAX 0.10/0.11** (Python 3.12). ColabDesign `main` (verified at commit `e31a56f`, 2026-09-16) still calls `jax.lib.xla_bridge.get_backend()` in `colabdesign/shared/utils.py`; that attribute was removed from `jax.lib` and the module now lives at `jax._src.xla_bridge` (which still exposes `get_backend()`). A repo-wide audit showed this is the **only** removed-API usage, so a two-line shim suffices — do NOT downgrade JAX:
+
+```python
+import jax
+if not hasattr(jax.lib, "xla_bridge"):
+    from jax._src import xla_bridge as _xla_bridge
+    jax.lib.xla_bridge = _xla_bridge
+print("xla_bridge backend:", jax.lib.xla_bridge.get_backend().platform)
+```
+
+The shim is included in the current `notebooks/01_rso_reproduction.ipynb` and `notebooks/02_length_experiment.ipynb` (imports cell, right after the `jax.devices()` print) and must execute before the first `clear_mem()` / `mk_afdesign_model()` call. Expected output: `xla_bridge backend: gpu`.
+
 ## Stage 1 RSO errors
 
 ### CUDA OOM on length 150+

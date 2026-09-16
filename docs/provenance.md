@@ -68,4 +68,9 @@ If a future ColabDesign `main` commit breaks our notebooks (API change):
 
 ## Currently recorded version changes
 
-(Empty as of initial project scaffolding. Populate after real runs.)
+### 2026-09-16 — JAX 0.11.1 removes `jax.lib.xla_bridge`; ColabDesign main not yet updated
+
+- Environment: Google Colab T4 runtime, Python 3.12, preinstalled **JAX 0.11.1**.
+- Error: `AttributeError: module 'jax.lib' has no attribute 'xla_bridge'` from `colabdesign/shared/utils.py::clear_mem()` (first GPU call).
+- ColabDesign version audited: `main` HEAD `e31a56fe1d9b4de25c8697f3a28b75892941cc72` (cloned 2026-09-16). Full-repo grep confirms the single remaining removed-API usage is `jax.lib.xla_bridge.get_backend()` in that one function. In JAX 0.11.1 the module exists at `jax._src.xla_bridge` with `get_backend()` intact; `jax/lib/__init__.py` only re-exports `version_str`.
+- Resolution chosen: in-notebook compatibility shim that aliases `jax.lib.xla_bridge = jax._src.xla_bridge` when missing, executed before any ColabDesign GPU call. Baked into `notebooks/01_rso_reproduction.ipynb` and `notebooks/02_length_experiment.ipynb` imports cells. Did **not** downgrade JAX (would require matching jaxlib/CUDA pinning on Colab). Details: `docs/TROUBLESHOOTING.md`.
