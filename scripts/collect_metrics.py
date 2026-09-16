@@ -82,8 +82,22 @@ def scan_run(rd: Path) -> list[CandidateRecord]:
     for fpath in fasta_files:
         backbone_id = fpath.stem.replace("_candidates", "")
         bb_status = (stats.get("backbones") or {}).get(backbone_id, {})
-        rso_runtime = bb_status.get("rso_runtime_seconds") or meta.get("rso_runtime_seconds")
+        rso_runtime = (bb_status.get("rso_runtime_seconds")
+                       or stats.get("rso_runtime_seconds")
+                       or meta.get("rso_runtime_seconds"))
+        mpnn_runtime = ((stats.get("stage2_mpnn") or {}).get("mpnn_runtime_seconds")
+                        or bb_status.get("mpnn_runtime_seconds"))
         final_loss = bb_status.get("final_loss") or meta.get("rso_final_loss")
+        # Fallback: final weighted loss from the per-step loss history artifact.
+        if final_loss is None:
+            lh = rd / "stage1_rso" / f"{backbone_id}_loss_history.csv"
+            if lh.exists():
+                try:
+                    ldf = pd.read_csv(lh)
+                    if "loss" in ldf.columns and len(ldf):
+                        final_loss = float(pd.to_numeric(ldf["loss"], errors="coerce").dropna().iloc[-1])
+                except Exception:
+                    pass
         for cand_id, seq in _parse_fasta(fpath):
             pred_pdb = stage3 / f"{backbone_id}_{cand_id}_predicted.pdb"
             metrics_json = stage3 / f"{backbone_id}_{cand_id}_metrics.json"
@@ -103,6 +117,11 @@ def scan_run(rd: Path) -> list[CandidateRecord]:
             if _plddt is not None and _plddt_scale is None and 0.0 <= _plddt <= 1.0:
                 _plddt *= 100.0
                 _plddt_scale = "auto_scaled_native_0_1_x100"
+            _val_runtime = float(m["validation_runtime_seconds"]) if m.get("validation_runtime_seconds") is not None else None
+            # Per-candidate wall time: shared RSO + MPNN stages plus this candidate's validation.
+            _total_runtime = None
+            if _val_runtime is not None:
+                _total_runtime = _val_runtime + float(rso_runtime or 0) + float(mpnn_runtime or 0)
             r = CandidateRecord(
                 experiment_name=str(meta.get("experiment_name") or rd.name),
                 run_id=rd.name,
@@ -126,9 +145,9 @@ def scan_run(rd: Path) -> list[CandidateRecord]:
                 plddt_scale=_plddt_scale,
                 ptm=float(m["ptm"]) if m.get("ptm") is not None else None,
                 rso_runtime_seconds=float(rso_runtime) if rso_runtime is not None else None,
-                mpnn_runtime_seconds=float(m.get("mpnn_runtime_seconds") or bb_status.get("mpnn_runtime_seconds") or 0) or None,
-                validation_runtime_seconds=float(m.get("validation_runtime_seconds")) if m.get("validation_runtime_seconds") is not None else None,
-                total_runtime_seconds=None,
+                mpnn_runtime_seconds=float(mpnn_runtime) if mpnn_runtime is not None else None,
+                validation_runtime_seconds=_val_runtime,
+                total_runtime_seconds=_total_runtime,
                 gpu_name=meta.get("gpu_name"),
                 peak_gpu_memory_mb=meta.get("gpu_memory_mb") or m.get("peak_gpu_memory_mb"),
                 colabdesign_commit=meta.get("colabdesign_commit"),

@@ -1,0 +1,18 @@
+{
+  "rmsd_angstrom": 0.6928861141204834,
+  "rmsd_source": "colabdesign_log",
+  "tm_score": 0.9692,
+  "tm_source": "tmscore_binary",
+  "mean_plddt": 94.26,
+  "ptm": 0.843193769454956,
+  "validation_runtime_seconds": 1.7276175022125244,
+  "validation_model": "model_4_ptm",
+  "af2_log": {
+    "dgram_cce": 1.209455132484436,
+    "pae": 0.0948987752199173,
+    "plddt": 0.9426475763320923,
+    "rmsd": 0.6928861141204834,
+    "ptm": 0.843193769454956
+  },
+  "plddt_scale": "colabdesign_native_0_1_x100"
+}

@@ -1,0 +1,115 @@
+{
+  "status": "completed",
+  "rso_runtime_seconds": 225.60365533828735,
+  "backbones": {
+    "bb0": {
+      "status": "rso_done",
+      "final_loss": null,
+      "length": 100,
+      "seed": 42,
+      "best_rso_seq": "SEWELAEWDLIEYWWHPFIAAAPFEGWLIIEAIYAARAYGFNPRENWWDRGARLRNKMAMALGQAAVYLALYAETGSIQYLINARYLRIVAAWLQAEINQ",
+      "candidates": [
+        {
+          "c": "c0",
+          "rmsd": 0.5085475444793701,
+          "tm": 0.9816,
+          "plddt": 94.28,
+          "ptm": 0.8251509666442871,
+          "time_s": 31.021326541900635,
+          "rmsd_source": "colabdesign_log",
+          "tm_source": "tmscore_binary",
+          "plddt_scale": "colabdesign_native_0_1_x100"
+        },
+        {
+          "c": "c1",
+          "rmsd": 0.7412957549095154,
+          "tm": 0.9657,
+          "plddt": 93.43,
+          "ptm": 0.8173702955245972,
+          "time_s": 1.7319166660308838,
+          "rmsd_source": "colabdesign_log",
+          "tm_source": "tmscore_binary",
+          "plddt_scale": "colabdesign_native_0_1_x100"
+        },
+        {
+          "c": "c2",
+          "rmsd": 0.6928861141204834,
+          "tm": 0.9692,
+          "plddt": 94.26,
+          "ptm": 0.843193769454956,
+          "time_s": 1.7276175022125244,
+          "rmsd_source": "colabdesign_log",
+          "tm_source": "tmscore_binary",
+          "plddt_scale": "colabdesign_native_0_1_x100"
+        },
+        {
+          "c": "c3",
+          "rmsd": 0.8499062061309814,
+          "tm": 0.9552,
+          "plddt": 92.33,
+          "ptm": 0.8233052492141724,
+          "time_s": 1.7289881706237793,
+          "rmsd_source": "colabdesign_log",
+          "tm_source": "tmscore_binary",
+          "plddt_scale": "colabdesign_native_0_1_x100"
+        },
+        {
+          "c": "c4",
+          "rmsd": 0.6661888360977173,
+          "tm": 0.9728,
+          "plddt": 92.56,
+          "ptm": 0.7929475903511047,
+          "time_s": 1.729125738143921,
+          "rmsd_source": "colabdesign_log",
+          "tm_source": "tmscore_binary",
+          "plddt_scale": "colabdesign_native_0_1_x100"
+        },
+        {
+          "c": "c5",
+          "rmsd": 0.6124420762062073,
+          "tm": 0.974,
+          "plddt": 91.6,
+          "ptm": 0.8135860562324524,
+          "time_s": 1.7345893383026123,
+          "rmsd_source": "colabdesign_log",
+          "tm_source": "tmscore_binary",
+          "plddt_scale": "colabdesign_native_0_1_x100"
+        },
+        {
+          "c": "c6",
+          "rmsd": 0.7832207083702087,
+          "tm": 0.9606,
+          "plddt": 92.34,
+          "ptm": 0.8391359448432922,
+          "time_s": 1.763078212738037,
+          "rmsd_source": "colabdesign_log",
+          "tm_source": "tmscore_binary",
+          "plddt_scale": "colabdesign_native_0_1_x100"
+        },
+        {
+          "c": "c7",
+          "rmsd": 0.8718183636665344,
+          "tm": 0.9534,
+          "plddt": 92.55,
+          "ptm": 0.8314875364303589,
+          "time_s": 1.751800298690796,
+          "rmsd_source": "colabdesign_log",
+          "tm_source": "tmscore_binary",
+          "plddt_scale": "colabdesign_native_0_1_x100"
+        }
+      ]
+    }
+  },
+  "stage2_mpnn": {
+    "num_seqs": 8,
+    "temperature": 0.1,
+    "weights": "soluble",
+    "rm_aa": "C",
+    "mpnn_runtime_seconds": 12.007977485656738
+  },
+  "validation": {
+    "model": "model_4_ptm",
+    "num_recycles": 3,
+    "total_validation_seconds": 43.18844246864319
+  }
+}

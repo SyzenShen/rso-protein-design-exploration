@@ -14,7 +14,8 @@ REQUIRED_CANDIDATE_COLUMNS = [
     "rso_iterations", "rso_final_loss",
     "mpnn_score", "mpnn_temperature",
     "validation_model",
-    "rmsd_angstrom", "tm_score", "mean_plddt", "ptm",
+    "rmsd_angstrom", "rmsd_source", "tm_score", "tm_source",
+    "mean_plddt", "plddt_scale", "ptm",
     "rso_runtime_seconds", "mpnn_runtime_seconds",
     "validation_runtime_seconds", "total_runtime_seconds",
     "gpu_name", "peak_gpu_memory_mb",
@@ -112,7 +113,15 @@ def build_backbone_summary(candidates_df: pd.DataFrame) -> pd.DataFrame:
     rows = []
     for keys, g in candidates_df.groupby(group_keys, dropna=False):
         success = g[g["status"] == STATUS_SUCCESS]
-        total = g["total_runtime_seconds"].sum()
+        # Backbone wall time = shared RSO + MPNN stages (counted once) + sum of
+        # per-candidate validation seconds. Per-row total_runtime_seconds attributes
+        # the shared stages to each candidate, so it must not be summed.
+        total = None
+        parts = [g["rso_runtime_seconds"].dropna().iloc[0] if g["rso_runtime_seconds"].notna().any() else None,
+                 g["mpnn_runtime_seconds"].dropna().iloc[0] if g["mpnn_runtime_seconds"].notna().any() else None,
+                 g["validation_runtime_seconds"].sum(min_count=1) if g["validation_runtime_seconds"].notna().any() else None]
+        if any(p is not None and not pd.isna(p) for p in parts):
+            total = float(sum(p for p in parts if p is not None and not pd.isna(p)))
         row = {
             "experiment_name": keys[0], "run_id": keys[1],
             "length": keys[2], "seed": keys[3], "backbone_id": keys[4],

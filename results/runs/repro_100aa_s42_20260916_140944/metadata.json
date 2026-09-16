@@ -1,0 +1,80 @@
+{
+  "timestamp_utc": "2026-09-16T14:09:44Z",
+  "colabdesign_repo_url": "https://github.com/sokrypton/ColabDesign",
+  "colabdesign_commit": "e31a56fe1d9b4de25c8697f3a28b75892941cc72",
+  "rso_notebook_url": "https://raw.githubusercontent.com/sokrypton/ColabDesign/main/af/examples/RSO.ipynb",
+  "rso_notebook_download_date": "2026-09-16T09:19:01Z",
+  "rso_notebook_sha256": "4d2c9477e65127277bd1c56b90c7fb69fd2e7ed00435d95d16baad1ca0b24ffb",
+  "python_version": "3.13.15",
+  "jax_version": "0.11.1",
+  "jax_devices": [
+    "cuda:0"
+  ],
+  "cuda_version": null,
+  "gpu_name": "Tesla T4",
+  "gpu_memory_mb": 15360.0,
+  "alphafold_params_source": "downloaded_during_setup",
+  "mpnn_weights_type": "soluble",
+  "random_seed": 42,
+  "git_commit": null,
+  "git_dirty": null,
+  "platform_info": {
+    "system": "Linux",
+    "release": "6.6.122+",
+    "machine": "x86_64",
+    "version": "#1 SMP Thu Apr 30 18:17:14 UTC 2026"
+  },
+  "config_snapshot": {
+    "experiment_name": "reproduction_100aa",
+    "backend": "colab",
+    "seed": 42,
+    "notes": "Reproduction of Frank et al. 2024 unconditional generation benchmark for 100 AA. Settings match official RSO notebook 'manuscript' defaults.",
+    "rso": {
+      "length": 100,
+      "lengths": null,
+      "copies": 1,
+      "iterations": 100,
+      "stage1_iterations": 90,
+      "stage2_iterations": 10,
+      "protocol": "hallucination",
+      "mode": [
+        "gumbel",
+        "soft"
+      ],
+      "rm_aa": "C",
+      "loss": {
+        "rg_weight": 0.1,
+        "rg_weight_large_over_600": null,
+        "helix_weight": -0.2,
+        "con_weight": 1.0,
+        "plddt_weight": 0.5,
+        "pae_weight": 0.5
+      }
+    },
+    "mpnn": {
+      "num_seqs": 8,
+      "temperature": 0.1,
+      "weights": "soluble",
+      "rm_aa": "C"
+    },
+    "validation": {
+      "model": "alphafold_single",
+      "alphafold_model": "model_4_ptm",
+      "num_recycles": 3,
+      "use_initial_guess": false,
+      "use_aa_initialization": false
+    },
+    "output": {
+      "base_dir": "results/runs",
+      "overwrite": false,
+      "resume": true
+    },
+    "experiment": {
+      "backbones_per_length": 1,
+      "seeds": null,
+      "seeds_override": null
+    },
+    "smoke_test": false
+  },
+  "notebook_modified_from_official": true
+}

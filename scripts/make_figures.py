@@ -17,9 +17,39 @@ import pandas as pd
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
-from rso_exploration.paths import METRICS_DIR, FIGURES_DIR, RUNS_DIR, loss_history_path  # noqa: E402
-from rso_exploration.metrics import load_all_candidates  # noqa: E402
-from rso_exploration.plotting import generate_all_figures, plot_loss_history  # noqa: E402
+from rso_exploration.paths import (  # noqa: E402
+    METRICS_DIR, FIGURES_DIR, RUNS_DIR, loss_history_path,
+    backbone_pdb_path, predicted_pdb_path,
+)
+from rso_exploration.metrics import load_all_candidates, STATUS_SUCCESS  # noqa: E402
+from rso_exploration.plotting import generate_all_figures, plot_loss_history, plot_structure_overlay  # noqa: E402
+
+
+def _generate_overlays(df: pd.DataFrame, runs_dir: Path, figures_dir: Path) -> list:
+    """One structure overlay per backbone: best-RMSD successful candidate vs. design."""
+    out = []
+    work = df[df["status"] == STATUS_SUCCESS].copy() if "status" in df.columns else df.copy()
+    work["rmsd_angstrom"] = pd.to_numeric(work["rmsd_angstrom"], errors="coerce")
+    for (run_id, bb), grp in work.dropna(subset=["rmsd_angstrom"]).groupby(["run_id", "backbone_id"]):
+        rd = runs_dir / run_id
+        best = grp.sort_values("rmsd_angstrom").iloc[0]
+        ref = backbone_pdb_path(rd, bb)
+        pred = predicted_pdb_path(rd, bb, str(best["candidate_id"]))
+        if not ref.exists() or not pred.exists():
+            continue
+        suffix = "" if work["length"].nunique() == 1 and len(work.groupby(["run_id", "backbone_id"])) == 1 \
+            else f"_{bb}"
+        p = figures_dir / f"structure_overlay{suffix}.png"
+        r = plot_structure_overlay(
+            ref, pred, out_path=p,
+            title=f"Best candidate overlay: {bb} / {best['candidate_id']} "
+                  f"({int(best['length'])} aa, seed {int(best['seed'])})",
+            rmsd=float(best["rmsd_angstrom"]),
+            tm=(float(best["tm_score"]) if pd.notna(best.get("tm_score")) else None))
+        if r is not None:
+            out.append(r)
+    return out
+
 
 
 def _collect_loss_histories(runs_dir: Path) -> dict[str, pd.DataFrame]:
@@ -58,6 +88,7 @@ def main() -> int:
     losses = _collect_loss_histories(RUNS_DIR)
     print(f"[info] Loss histories loaded: {len(losses)}")
     generated = generate_all_figures(df, loss_history_dfs=losses or None)
+    generated.extend(_generate_overlays(df, RUNS_DIR, Path(args.figures_dir)))
     if not generated:
         print("[info] No real numeric data. No figures generated (no synthetic plots).")
     else:

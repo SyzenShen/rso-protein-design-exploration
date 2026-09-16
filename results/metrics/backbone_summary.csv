@@ -1,0 +1,2 @@
+experiment_name,run_id,length,seed,backbone_id,num_candidates,num_successful,best_rmsd_angstrom,best_tm_score,best_mean_plddt,total_runtime_seconds
+repro_100aa_s42_20260916_140944,repro_100aa_s42_20260916_140944,100,42,bb0,8,8,0.5085475444793701,0.9816,94.28,280.8000752925873

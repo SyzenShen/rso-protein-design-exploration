@@ -1,8 +1,23 @@
 # rso-protein-design-exploration
 
+**Reproduction status: 100-aa benchmark COMPLETED on a real GPU (2026-09-16, Tesla T4, Colab).**
+8/8 ProteinMPNN candidates re-fold to the RSO-designed backbone with CA RMSD 0.51–0.87 Å and TM-score 0.953–0.982 under independent single-sequence AlphaFold `model_4_ptm` validation. Verified with `scripts/verify_outputs.py --require-real-metrics` (0 errors, 0 warnings). The controlled length experiment (Section 7) is **not** executed yet and remains a hypothesis.
+
+![Best candidate structure overlay: independent AlphaFold prediction (red) of an MPNN-designed sequence superposed on the RSO-designed backbone (blue), 100 aa, seed 42. CA RMSD 0.51 Angstrom, TM-score 0.982.](figures/structure_overlay.png)
+
+*Figure 1. Structural overlay for the best of 8 candidates (`c0`). The red trace is a from-scratch single-sequence AlphaFold prediction of a ProteinMPNN sequence that never saw the designed coordinates; blue is the RSO-hallucinated backbone. Kabsch superposition of CA atoms rendered directly from the saved PDB files by `src/rso_exploration/plotting.py`.*
+
+![RSO convergence: weighted total loss and per-component losses (contacts con, radius of gyration rg, pLDDT confidence term) over the 100 design steps (90 gumbel + 10 save_best).](figures/optimization_loss_100aa.png)
+
+*Figure 2. Stage 1 RSO optimisation history (100 aa, seed 42, Tesla T4, 225.6 s). Total loss 6.48 → 0.87; the radius-of-gyration penalty collapses from 14.58 to ≈0.13 as the chain condenses into a compact globular fold. Per-step values captured from the execution console and stored in `stage1_rso/bb0_loss_history.csv` (see [docs/provenance.md](docs/provenance.md)).*
+
+![Per-candidate validation metric distributions for the 8 ProteinMPNN sequences: RMSD, TM-score, mean pLDDT.](figures/candidate_metrics_100aa.png)
+
+*Figure 3. Independent Stage 3 validation metrics for all 8 candidates of the 100-aa backbone. RMSD primary values come from the ColabDesign fixbb aligned log (the same quantity tabulated by the official notebook's `designability_test()`); TM-scores from the Zhang-group `TMscore` binary; provenance of every value is recorded per candidate in `rmsd_source`/`tm_source`.*
+
 ## 2. Summary
 
-This repository implements a computational de novo protein design pipeline based on Relaxed Sequence Optimization (RSO) as introduced by Frank et al. (2024). It integrates RSO backbone hallucination via ColabDesign, ProteinMPNN inverse folding for sequence generation, and AlphaFold-derived structure prediction for self-consistency validation. The project targets the unconditional 100-amino-acid generation benchmark from the original paper and extends it with a controlled length-scaling experiment. All experimental parameters are specified in versioned YAML configurations, outputs are structured with full provenance metadata, and results are validated by an automated verification script. This repository contains no wet-lab experiments and no fabricated computational results; all GPU-intensive stages are designed for execution on Google Colab with an NVIDIA runtime. Reproduction status: NOT YET EXECUTED.
+This repository implements a computational de novo protein design pipeline based on Relaxed Sequence Optimization (RSO) as introduced by Frank et al. (2024). It integrates RSO backbone hallucination via ColabDesign, ProteinMPNN inverse folding for sequence generation, and AlphaFold-derived structure prediction for self-consistency validation. The project targets the unconditional 100-amino-acid generation benchmark from the original paper and extends it with a controlled length-scaling experiment. All experimental parameters are specified in versioned YAML configurations, outputs are structured with full provenance metadata, and results are validated by an automated verification script. This repository contains no wet-lab experiments and no fabricated computational results; all GPU-intensive stages execute on Google Colab with an NVIDIA runtime. Reproduction status: **100-aa benchmark reproduced with real results (Sections 6 and 15); length experiment pending (Section 7).**
 
 ## 3. Scientific Motivation
 
@@ -36,13 +51,13 @@ The pipeline is organised into four sequential stages. Each stage writes its out
 
 4. **Stage 4 -- Ranking, collection, and visualisation.** Per-backbone candidates are ranked independently by lowest RMSD, highest TM-score, and highest mean pLDDT; no arbitrary composite score is enforced by default. The `collect_metrics.py` script consolidates all candidates into `results/metrics/all_candidates.csv` (one row per candidate) and produces a per-backbone summary `backbone_summary.csv`. The `make_figures.py` script then reads the consolidated CSV and, if and only if real non-missing numeric values are present, writes publication-ready PNG figures to `figures/`.
 
-A pipeline diagram is not included because no real runs have been produced yet; once the 100-aa reproduction completes, `03_results_analysis.ipynb` can render a schematic from the actual stage completion data.
+The structural overlay at the top of this README (Figure 1) is rendered from the actual Stage 1 and Stage 3 PDB outputs of the completed 100-aa run, and the Stage 4 timing/metric figures are generated from the consolidated CSV rather than drawn by hand.
 
 ## 6. Reproduction Target
 
 The primary reproduction target is the **unconditional 100-amino-acid generation benchmark** of Frank et al. (2024, Fig. 2 and Extended Data), as parameterised in the official ColabDesign RSO notebook under its "manuscript" defaults. The configuration is fixed in `configs/reproduction_100aa.yaml` with: length = 100, copies = 1, RSO iterations = 100 (stage1 90 / stage2 10), protocol = hallucination, gumbel-then-soft mode, cysteine removed from both RSO and ProteinMPNN, ProteinMPNN soluble weights, temperature 0.1, 8 sequences per backbone, AlphaFold `model_4_ptm` validation with 3 recycles, and random seed 42.
 
-**Reproduction status: NOT YET EXECUTED.** No GPU runs have been performed on this machine. The repository is scaffolded, configured, unit-tested on CPU-only code paths, and ready for execution on a Colab NVIDIA T4/A100 runtime per `docs/COLAB_RUNBOOK.md`. This section will be updated only after `scripts/verify_outputs.py --require-real-metrics` passes on merged-back Colab results.
+**Reproduction status: COMPLETED ON COLAB (2026-09-16).** Run `repro_100aa_s42_20260916_140944` executed the full three-stage pipeline on a Google Colab NVIDIA Tesla T4 (ColabDesign commit `e31a56fe1d9b4de25c8697f3a28b75892941cc72`, Python 3.13.15, JAX 0.11.1), and the result archive was merged into this repository and verified locally. Stage timings: RSO 225.6 s, ProteinMPNN 12.0 s, Stage 3 validation 43.2 s summed over 8 candidates (31.0 s for the first candidate including XLA compilation, ~1.7 s per candidate thereafter), total wall time ~280.8 s. The final RSO weighted loss reached 0.87 (from 6.48 at step 0). All 8 ProteinMPNN candidates passed validation (`status = success`): best CA RMSD 0.509 Å, best TM-score 0.982, best mean pLDDT 94.28 (0–100 canonical scale; ColabDesign reports native 0–1). The full per-candidate table appears in Section 15. Two deviations from the upstream Colab runtime are documented in `docs/provenance.md`: the Colab clone had no `.git` directory so `git_commit` is null in `metadata.json` (the ColabDesign commit is pinned instead), and JAX 0.11 required the documented compatibility shims. Exact execution steps are in `docs/COLAB_RUNBOOK.md`.
 
 ## 7. Length Experiment
 
@@ -51,7 +66,7 @@ A controlled parameter sweep over protein length is specified in two complementa
 - **Quick profile** (`configs/length_experiment_quick.yaml`): lengths = [100, 150, 200] amino acids, 1 independent backbone (random seed) per length, 8 ProteinMPNN sequences per backbone. Intended as a first real-data sanity check after the 100-aa reproduction succeeds. Expected total: 3 backbones x 8 candidates = 24 validation runs.
 - **Full profile** (`configs/length_experiment_full.yaml`): lengths = [100, 150, 200, 300] amino acids, 3 independent random seeds (42, 123, 2024) per length, 8 ProteinMPNN sequences per backbone. Intended for generous GPU allocation. Expected total: 12 backbones x 8 candidates = 96 validation runs. Note: 300-aa runs risk out-of-memory on consumer-grade GPUs; the configuration is retained as a ceiling rather than a guaranteed-to-run workload.
 
-**Status: Pending execution.** Neither quick nor full profiles have been executed. All length-dependent comparisons in this README are therefore framed as hypotheses, not observations.
+**Status: Pending execution.** Neither profile has been executed; only the single L = 100 benchmark point from Section 6 exists. All length-dependent comparisons in this README are therefore framed as hypotheses, not observations, and the length-axis figures (`rmsd_vs_length.png`, `tmscore_vs_length.png`, `plddt_vs_length.png`, `runtime_vs_length.png`) currently contain exactly one x-value — that point alone.
 
 ## 8. Repository Structure
 
@@ -251,7 +266,7 @@ Each run ID is a deterministic string encoding experiment name, length, seed, an
 
 ### Figures: `figures/`
 
-PNG plots at 150 DPI, GitHub-friendly resolution. Each plot function in `src/rso_exploration/plotting.py` short-circuits and returns `None` (creating no file) when its required numeric column is entirely NA, so fake figures from empty runs cannot be produced. Expected figures after successful experiments: `rmsd_vs_length.png`, `tmscore_vs_length.png`, `plddt_vs_length.png`, `runtime_vs_length.png`, `optimization_loss_100aa.png`, `candidate_metrics_100aa.png`.
+PNG plots at 150 DPI, GitHub-friendly resolution. Each plot function in `src/rso_exploration/plotting.py` short-circuits and returns `None` (creating no file) when its required numeric column is entirely NA, so fake figures from empty runs cannot be produced. Figures present from the 100-aa run: `rmsd_vs_length.png`, `tmscore_vs_length.png`, `plddt_vs_length.png`, `runtime_vs_length.png` (each with a single L = 100 data group until the length sweep runs), `optimization_loss_100aa.png`, `candidate_metrics_100aa.png`, and `structure_overlay.png` (3D CA-trace Kabsch overlay of the best-RMSD successful candidate versus its designed backbone).
 
 ## 14. Metrics
 
@@ -264,35 +279,67 @@ A column-by-column reference with units, valid ranges, and computation methods i
 | `mean_plddt` | Arithmetic mean of per-residue predicted local distance difference test scores reported internally by the AlphaFold validation model for its own prediction. Note this is a model-confidence score for the prediction, not a measure of agreement with the designed backbone. | Dimensionless; [0, 100] |
 | `ptm` | Predicted TM-score reported internally by `model_4_ptm` for its own prediction. Present only when AF model supports it; NA otherwise. | Dimensionless; [0, 1] |
 | `mpnn_score` | ProteinMPNN per-residue average negative log-likelihood (`-(S·log q).sum / L`, ColabDesign `mpnn.sample()["score"]`). **Lower = more probable / more favourable** under the MPNN model. | Nats (average cross-entropy); ≥ 0 |
-| `rso_runtime_seconds`, `mpnn_runtime_seconds`, `validation_runtime_seconds`, `total_runtime_seconds` | Elapsed wall-clock time per stage. Sum of per-candidate times for total; recorded by per-stage wrappers on the Colab GPU instance. | Seconds |
+| `rso_runtime_seconds`, `mpnn_runtime_seconds`, `validation_runtime_seconds` | Elapsed wall-clock time per stage on the Colab GPU instance. RSO and MPNN are shared stages recorded once per backbone; validation is per candidate (first candidate includes XLA compilation). | Seconds |
+| `total_runtime_seconds` | Per candidate row: `rso + mpnn + own_validation` (shared stages attributed to each candidate — do not sum). Per backbone (`backbone_summary.csv`): RSO + MPNN counted once + sum of validations = 280.8 s for the 100-aa run. | Seconds |
 | Provenance columns: `gpu_name`, `peak_gpu_memory_mb`, `colabdesign_commit`, `git_commit` | Captured by `collect_provenance()` at the start of each run. `peak_gpu_memory_mb` is NA if nvidia-smi pmon is unavailable in the runtime. | Mixed |
 
 **Important caveats that apply to every metric in this project:** (a) high `mean_plddt` reflects AlphaFold's self-confidence for its prediction and does **not** equal experimental validation success -- a sequence can fold confidently to a structure entirely different from the intended backbone; (b) agreement between prediction and design (low RMSD, high TM-score) within a single AlphaFold-family pipeline does **not** mean the protein expresses, is soluble, or is thermodynamically stable in a test tube; (c) using an AlphaFold-derived model for both RSO hallucination and validation may introduce method bias, so the RMSD/TM reported here are best interpreted as self-consistency scores, not independent ground truth.
 
 ## 15. Results
 
-**Pending execution.** No real computational runs have been performed on this machine because a CUDA-enabled NVIDIA GPU required by ColabDesign RSO and AlphaFold is not available locally. The pipeline scripts, configuration system, schema, metrics collectors, figure generators, and automated verification logic have all been implemented and unit-tested on CPU-only scaffolding and synthetic fixtures, but no RSO backbone, no ProteinMPNN sequence, no AlphaFold prediction, and no real RMSD/TM-score/pLDDT values exist in the repository.
+The 100-aa reproduction produced one RSO-designed backbone (`bb0`, 100 CA atoms) and 8 ProteinMPNN candidate sequences (all 100 residues, zero cysteines), and all 8 candidates were validated independently by single-sequence AlphaFold `model_4_ptm` (3 recycles, 1 model). Every candidate folded into a structure in close agreement with the designed backbone; all 8 carry `status = success`.
 
-Population of this Results section is strictly gated by the following checklist:
+**Per-candidate metrics (run `repro_100aa_s42_20260916_140944`, seed 42):**
 
-1. Colab GPU runtime confirmed; notebook executed end-to-end for `configs/reproduction_100aa.yaml`.
-2. Result `.zip` downloaded from Colab and merged into the local `results/runs/`, `results/metrics/`, and `figures/` trees.
-3. `python scripts/verify_outputs.py --require-real-metrics` exits with code 0. This verifies: required PDB files exist and contain ATOM records; FASTA counts match `mpnn.num_seqs`; predicted PDBs exist for every candidate; `all_candidates.csv` contains all required columns and has real numeric RMSD/TM/pLDDT values for at least one success-status row; `metadata.json` captures a non-null `colabdesign_commit`, `gpu_name`, and `config_snapshot`; and `status.json` stage flags match the actual files on disk.
-4. Only after the 100-aa reproduction is verified above will the quick and full length experiments be eligible to populate length-dependent results.
+| Candidate | RMSD (Å) | TM-score | mean pLDDT (0–100) | pTM | ProteinMPNN score* | Validation time (s) |
+|-----------|---------:|---------:|-------------------:|----:|-------------------:|--------------------:|
+| c0 | 0.509 | 0.9816 | 94.28 | 0.8252 | 0.765 | 31.0 |
+| c1 | 0.741 | 0.9657 | 93.43 | 0.8174 | 0.749 | 1.7 |
+| c2 | 0.693 | 0.9692 | 94.26 | 0.8432 | 0.805 | 1.7 |
+| c3 | 0.850 | 0.9552 | 92.33 | 0.8233 | 0.788 | 1.7 |
+| c4 | 0.666 | 0.9728 | 92.56 | 0.7929 | 0.775 | 1.7 |
+| c5 | 0.612 | 0.9740 | 91.60 | 0.8136 | 0.767 | 1.7 |
+| c6 | 0.783 | 0.9606 | 92.34 | 0.8391 | 0.832 | 1.8 |
+| c7 | 0.872 | 0.9534 | 92.55 | 0.8315 | 0.802 | 1.8 |
 
-No reproduction of Frank et al. (2024) is claimed, and no reproduction will be claimed, until this gating process completes cleanly on this repository's `main` branch.
+\* ProteinMPNN score = average per-residue negative log likelihood, ColabDesign convention `-(S·log q).sum()/L`; **lower is better**.
+
+**Distributions across the 8 candidates:** RMSD 0.509–0.872 Å (mean 0.716 ± 0.122); TM-score 0.9534–0.9816 (0.9666 ± 0.0098); mean pLDDT 91.60–94.28 (92.92 ± 0.97). Best candidate `c0` by both RMSD and TM-score. Stage timings: RSO 225.6 s (weighted loss 6.48 → 0.87 over 100 steps), ProteinMPNN 12.0 s, Stage 3 43.2 s total (31.0 s first candidate including XLA compilation, then ~1.7 s each), backbone wall-time total 280.8 s on a Tesla T4. All raw values are machine-readable in `results/metrics/all_candidates.csv`, `results/runs/repro_100aa_s42_20260916_140944/stage3_validation/*.json`, and the run's `status.json`; RMSD provenance is `colabdesign_log`, TM provenance `tmscore_binary`, pLDDT scale `colabdesign_native_0_1_x100`.
+
+**Gating checklist — satisfied:**
+
+1. ✅ Colab NVIDIA Tesla T4 runtime; notebook executed end-to-end for `configs/reproduction_100aa.yaml` (2026-09-16).
+2. ✅ Result archive `rso_results_20260916T143204Z.zip` downloaded and merged into `results/runs/`; metrics aggregated into `results/metrics/`; figures regenerated into `figures/` from real data only.
+3. ✅ `python scripts/verify_outputs.py --require-real-metrics` exits 0 with **0 errors, 0 warnings**: all PDBs contain ATOM records, FASTA count matches `mpnn.num_seqs = 8`, predicted PDBs exist for every candidate, `all_candidates.csv` has real numeric RMSD/TM/pLDDT for every success row, `metadata.json` pins `colabdesign_commit`, `gpu_name`, and the config snapshot, and `status.json` stage flags match files on disk. All 9 PDBs independently checked to contain exactly 100 CA atoms.
+4. ⬜ Length experiment (Section 7) not yet executed — no length-dependent claims are made anywhere in this repository.
+
+Interpretation remains bounded by Section 17: these are single-model-family self-consistency numbers from one backbone, one seed, and n = 8 candidates, with no wet-lab confirmation of any kind.
 
 ## 16. Observations
 
-**Pending execution.** This section is intentionally empty of empirical observations. No data exist yet; any stated patterns would be speculative. The following scientific hypotheses are pre-registered here to guide analysis after runs complete, and are explicitly labelled as hypotheses rather than observations:
+Observations below are restricted to what the single completed run — one 100-aa backbone, seed 42, n = 8 candidates, one validation model — actually supports. They are descriptive statistics, not population-level claims.
 
-- **H1 (length vs. quality):** Under a fixed 100-step RSO budget, RMSD to the designed backbone will increase monotonically with length and TM-score will decrease with length, because the conformational search space grows faster than the optimisation budget. Quick sweep hypothesis: RMSD at 200 aa >= RMSD at 150 aa >= RMSD at 100 aa.
-- **H2 (confidence vs. agreement dissociation):** Some candidates with `mean_plddt` > 90 will nonetheless have RMSD > 4 A to the design target, because AlphaFold can be independently confident in an incorrect (off-backbone) fold that is internally self-consistent. Hypothesis: per-candidate `mean_plddt` and `rmsd_angstrom` will show only weak negative correlation (Pearson |r| < 0.4) across the full sweep.
-- **H3 (validation model sensitivity):** If a second validation model (e.g., ESMFold) were added, per-candidate ranking by RMSD/TM-score would change non-trivially relative to the AlphaFold `model_4_ptm` ranking. This is not testable with the current single-validation-model configuration and is flagged as future work.
-- **H4 (same-family bias):** Because both RSO (AF-derived ColabDesign trunk) and validation use AlphaFold-family models, the RMSD/TM distributions measured here are expected to be optimistic relative to what an orthogonal validation model or crystallographic ground truth would show. Operationalisation: compare this repo's TM-score distribution to the experimental 8S89 benchmark once enough data exists, and quantify the gap.
-- **H5 (experimental feedback in ranking):** Candidate rankings that ignore pLDDT and rely purely on TM-score/RMSD will rank the experimentally best-characterised designs more accurately than rankings that use a naive composite. This cannot be addressed without wet-lab data and is flagged as a follow-up integration point.
+**O1 — All eight independently predicted structures agree with the designed backbone at sub-Angstrom level.** RMSD 0.509–0.872 Å and TM-score ≥ 0.953 for every candidate (Figure 1, Figure 3 top row). Under this pipeline's own validation criterion the 100-aa RSO design is fully "designable": every ProteinMPNN sequence re-folds, from sequence alone, into the RSO geometry. This is qualitatively consistent with the high unconditional-designability rate Frank et al. (2024) report, though direct numerical comparison is not attempted here (different seeds and sampling).
 
-All five hypotheses are revisable after real data is collected and are superseded by whatever the actual metrics show.
+**O2 — Candidate spread is narrow.** Across 8 sequences, RMSD standard deviation is 0.12 Å and TM-score standard deviation 0.01, despite the sequences being independently sampled. At ProteinMPNN temperature 0.1 the eight draws are close sequence neighbours of the mode; the result shows the agreement is robust across that local sequence neighbourhood rather than carried by one lucky draw. It does not show robustness at higher temperatures or across different backbones.
+
+**O3 — RSO optimisation converges smoothly at this length.** Weighted loss falls from 6.48 (step 0) to 0.87 (step 99), with the radius-of-gyration term collapsing from 14.58 to ≈0.13 as the extended chain condenses, while the contact term settles near 1.12–1.16 through the final `save_best` steps (Figure 2). The pLDDT confidence component stays saturated near 1.0 from mid-optimisation onward — i.e. the internal predictor is confident early, but geometric agreement keeps improving afterwards, a small reminder that loss-component saturation is not a convergence signal for geometry.
+
+**O4 — Confidence/agreement dissociation (pre-registered H2) was NOT observed in this sample.** All candidates combine pLDDT > 91 with RMSD < 0.9 Å; no candidate was "confidently wrong". The Pearson correlation between mean pLDDT and RMSD is r = −0.39 — weak, numerically in the direction H2 predicted, but with n = 8 it is not statistically distinguishable from zero, and the mechanism H2 describes (off-backbone confident folds) simply did not occur here.
+
+**O5 — ProteinMPNN score is an imperfect proxy for fold agreement.** Pearson r between MPNN NLL score and RMSD is +0.50 (higher NLL → worse agreement, intuitive direction, exploratory n = 8), but the rankings do not coincide: `c1` has the best (lowest) MPNN score 0.749 yet ranks 6th by RMSD (0.741 Å), while `c0` (MPNN 0.765) is best by RMSD and TM. Independent fold validation adds information beyond the inverse-folding likelihood even in this tiny, successful sample.
+
+**O6 — Runtime at L = 100 is dominated by Stage 1.** RSO 225.6 s ≈ 80% of the 280.8 s backbone wall time; MPNN 12.0 s; after the first 31.0 s validation (XLA compilation) each further candidate costs ~1.7 s. The complete 8-candidate benchmark fits in roughly 5 minutes on a free-tier Tesla T4, so validation cost is negligible next to hallucination at this length. How this scales with length is precisely what the pending Section 7 experiment measures; the single-point `runtime_vs_length` figure is deliberately left as one x-value rather than extrapolated.
+
+**Status of the pre-registered hypotheses:**
+
+- **H1 (length vs. quality): untestable yet.** Only L = 100 exists; the [100, 150, 200] quick sweep must run before any monotonicity statement.
+- **H2 (confidence vs. agreement dissociation): not observed in n = 8** (see O4); remains plausible across larger/longer designs.
+- **H3 (validation model sensitivity): untestable yet** — only AlphaFold `model_4_ptm`; ESMFold not implemented.
+- **H4 (same-family bias): not bounded.** Agreement between two AlphaFold-family models may be optimistic; no orthogonal validator or crystallographic comparison (e.g. 8S89 anchor) has been performed.
+- **H5 (experimental feedback in ranking): untestable without wet-lab labels**; the schema's reserved extension points remain unused by design.
+
+Hypotheses H1, H3, and H5 are revisable only after additional real data is collected; nothing in O1–O6 should be read as evidence for or against them.
 
 ## 17. Limitations
 

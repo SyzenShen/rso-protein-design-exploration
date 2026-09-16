@@ -15,11 +15,11 @@ All quantities below are stored in `results/metrics/all_candidates.csv` (one row
 | `mpnn_score` | ProteinMPNN sample negative-log-probability score for the sequence (lower = more probable under MPNN). | Real number, unbounded. | Source: `mpnn_model.sample()["score"]`. |
 | `mpnn_temperature` | Sampling temperature used in ProteinMPNN. | Float ≥ 0. | Set in config YAML. |
 | `rso_iterations` | Number of design-logit iterations actually performed for this backbone. | Integer ≥ 1. | |
-| `rso_final_loss` | Scalar total loss at the end of Stage 1 design. | Real number. | Source: mean of `af_model.aux['losses']['total']` at final step; exact interpretation is model-internal so use for sanity only, not cross-paper comparison. |
-| `rso_runtime_seconds` | Wall-clock seconds elapsed in the Stage 1 design call. | seconds. | |
-| `mpnn_runtime_seconds` | Wall-clock seconds elapsed in the Stage 2 MPNN sample call. | seconds. | |
-| `validation_runtime_seconds` | Wall-clock seconds elapsed in the Stage 3 AF2 prediction for the candidate. | seconds. | |
-| `total_runtime_seconds` | Backbone-level total runtime; for a candidate row this may equal `rso + mpnn + validation` if known, else NA. | seconds. | |
+| `rso_final_loss` | Scalar total loss at the end of Stage 1 design. | Real number. | Source: final weighted-loss value from `stage1_rso/<bb>_loss_history.csv` (ColabDesign design log `loss` column); exact interpretation is model-internal so use for sanity only, not cross-paper comparison. |
+| `rso_runtime_seconds` | Wall-clock seconds elapsed in the Stage 1 design call. | seconds. | Shared across all candidates of the backbone; read from `status.json` top-level `rso_runtime_seconds`. |
+| `mpnn_runtime_seconds` | Wall-clock seconds elapsed in the Stage 2 MPNN sample call for the whole candidate batch. | seconds. | Shared across all candidates; read from `status.json -> stage2_mpnn.mpnn_runtime_seconds`. |
+| `validation_runtime_seconds` | Wall-clock seconds elapsed in the Stage 3 AF2 prediction for the candidate. | seconds. | First candidate includes XLA compilation overhead. |
+| `total_runtime_seconds` | Candidate-attributed wall time: `rso + mpnn + own_validation` (shared RSO/MPNN stages attributed to each row). | seconds. | Do NOT sum this column across candidates; the shared stages would be counted 8 times. |
 | `gpu_name` | Human-readable GPU name from `nvidia-smi`. E.g. "NVIDIA A100-SXM4-40GB". | string. | |
 | `peak_gpu_memory_mb` | Peak GPU memory consumption observed for the run. NA if instrumentation unavailable. | MiB. | Availability depends on environment; treat as best-effort. |
 | `colabdesign_commit` | Git HEAD commit SHA of the installed ColabDesign repo at runtime, or NA. | 40-hex SHA or NA. | |
@@ -42,7 +42,7 @@ We use empty cells in CSV (read as `pd.NA`/`NaN`) for missing values. **Never** 
 | `best_rmsd_angstrom` | Minimum RMSD among successful candidates. |
 | `best_tm_score` | Maximum TM-score among successful candidates. |
 | `best_mean_plddt` | Maximum mean pLDDT among successful candidates. |
-| `total_runtime_seconds` | Sum of total_runtime_seconds over candidates. |
+| `total_runtime_seconds` | True backbone wall time: shared `rso_runtime_seconds` + `mpnn_runtime_seconds` counted once each, plus the sum of per-candidate `validation_runtime_seconds`. (280.8 s for the 100-aa run: 225.6 + 12.0 + 43.2.) |
 
 ## Ranking semantics
 
