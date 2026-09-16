@@ -1,0 +1,35 @@
+experiment_name: smoke_test
+backend: colab
+seed: 0
+notes: "SMOKE TEST ONLY - NOT FOR SCIENTIFIC USE. Verifies code paths only; uses minimal iterations."
+rso:
+  length: 50
+  copies: 1
+  iterations: 5
+  stage1_iterations: 3
+  stage2_iterations: 2
+  protocol: hallucination
+  mode: ["gumbel", "soft"]
+  rm_aa: "C"
+  loss:
+    rg_weight: 0.1
+    helix_weight: -0.1
+    con_weight: 1.0
+    plddt_weight: 0.5
+    pae_weight: 0.5
+mpnn:
+  num_seqs: 2
+  temperature: 0.1
+  weights: soluble
+  rm_aa: "C"
+validation:
+  model: alphafold_single
+  alphafold_model: model_4_ptm
+  num_recycles: 1
+  use_initial_guess: false
+  use_aa_initialization: false
+output:
+  base_dir: results/runs
+  overwrite: false
+  resume: true
+smoke_test: true

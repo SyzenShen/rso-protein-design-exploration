@@ -1,0 +1,68 @@
+# AlphaFold parameters and model weights
+params/
+weights/
+
+# Caches and temporary files
+.cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+.DS_Store
+tmp/
+
+# Archive files
+*.zip
+*.tar.gz
+*.tar
+
+# Google Drive mounts (Colab)
+drive/
+gdrive/
+
+# Secrets and environment
+secrets*
+.env
+.env.local
+.env.*.local
+
+# Python packaging
+*.egg-info/
+*.egg
+dist/
+build/
+eggs/
+wheels/
+*.whl
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Jupyter
+.notebook
+.ipynb_checkpoints/
+
+# Pyre
+.pyre/
+
+# mypy / pytest
+.mypy_cache/
+.pytest_cache/
+
+# KEEP: Small research data files (unignore patterns)
+# The following are tracked: *.pdb, *.fasta, *.csv, *.yaml, *.yml, *.png, *.log
+# (These are kept by default; explicit unignore if nested within excluded dirs)
+!data/**/*.pdb
+!data/**/*.fasta
+!data/**/*.csv
+!data/**/*.yaml
+!data/**/*.yml
+!results/**/*.pdb
+!results/**/*.fasta
+!results/**/*.csv
+!results/**/*.json
+!figures/**/*.png

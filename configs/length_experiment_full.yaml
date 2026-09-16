@@ -1,0 +1,38 @@
+experiment_name: length_experiment_full
+backend: colab
+seed: 42
+notes: "Full length experiment. 3 seeds (backbones) per length [100,150,200,300]. WARNING: 300 AA requires substantial GPU memory. If OOM occurs, exclude 300 and re-run."
+rso:
+  lengths: [100, 150, 200, 300]
+  copies: 1
+  iterations: 100
+  stage1_iterations: 90
+  stage2_iterations: 10
+  protocol: hallucination
+  mode: ["gumbel", "soft"]
+  rm_aa: "C"
+  loss:
+    rg_weight: 0.1
+    rg_weight_large_over_600: 0.01
+    helix_weight: -0.2
+    con_weight: 1.0
+    plddt_weight: 0.5
+    pae_weight: 0.5
+mpnn:
+  num_seqs: 8
+  temperature: 0.1
+  weights: soluble
+  rm_aa: "C"
+validation:
+  model: alphafold_single
+  alphafold_model: model_4_ptm
+  num_recycles: 3
+  use_initial_guess: false
+  use_aa_initialization: false
+output:
+  base_dir: results/runs
+  overwrite: false
+  resume: true
+experiment:
+  backbones_per_length: 3
+  seeds: [42, 123, 2024]

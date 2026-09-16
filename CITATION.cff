@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "If you use this software in your work, please cite it using the following metadata."
+title: "RSO Protein Design Exploration"
+type: software
+authors:
+  - family-names: "Contributor"
+    given-names: "Repo Owner"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+version: 0.1.0
+date-released: 2026-09-16
+repository-code: "https://github.com/shenyz/rso-protein-design-exploration"
+license: MIT
+references:
+  -
+    type: article
+    authors:
+      - family-names: "Frank"
+        given-names: "Justas"
+      - family-names: "Wicky"
+        given-names: "Basile I. M."
+      - family-names: "Liu"
+        given-names: "Shirley"
+      - family-names: "Mulligan"
+        given-names: "Vikram K."
+      - family-names: "Pereira"
+        given-names: "José H."
+      - family-names: "Greisman"
+        given-names: "Hannah G."
+      - family-names: "Lai"
+        given-names: "Yong-Kuan"
+      - family-names: "Huang"
+        given-names: "Po-Ssu"
+      - family-names: "Baker"
+        given-names: "David"
+    title: "Rapid fixed-backbone protein sequence design with deep learning"
+    journal: "Science"
+    year: 2024
+    doi: "10.1126/science.adq1741"
+    publisher: "American Association for the Advancement of Science (AAAS)"

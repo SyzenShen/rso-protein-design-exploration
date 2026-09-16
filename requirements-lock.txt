@@ -1,0 +1,22 @@
+# Requirements lockfile for reproducibility (non-GPU, environment-agnostic packages)
+# -----------------------------------------------------------------------------
+# NOTE: The following packages are ENVIRONMENT-SPECIFIC and are NOT pinned here:
+#   - colabdesign (incl. RSO / ProteinMPNN): install via setup scripts or Colab
+#   - jax / jaxlib: CPU or GPU build depends on target platform
+#   - torch / torchvision: CPU or CUDA build depends on target platform
+#   - AlphaFold 2 parameters / model weights: downloaded at runtime, not pip packages
+# See setup docs or docs/environment_audit.md for backend installation notes.
+# -----------------------------------------------------------------------------
+
+pyyaml==6.0.1
+pandas==2.1.4
+numpy==1.26.3
+scipy==1.11.4
+matplotlib==3.8.2
+seaborn==0.13.1
+biopython==1.83
+pytest==7.4.4
+tqdm==4.66.1
+jupyter==1.0.0
+ipywidgets==8.1.1
+jsonschema==4.20.0

@@ -1,0 +1,34 @@
+experiment_name: reproduction_100aa
+backend: colab
+seed: 42
+notes: "Reproduction of Frank et al. 2024 unconditional generation benchmark for 100 AA. Settings match official RSO notebook 'manuscript' defaults."
+rso:
+  length: 100
+  copies: 1
+  iterations: 100
+  stage1_iterations: 90
+  stage2_iterations: 10
+  protocol: hallucination
+  mode: ["gumbel", "soft"]
+  rm_aa: "C"
+  loss:
+    rg_weight: 0.1
+    helix_weight: -0.2
+    con_weight: 1.0
+    plddt_weight: 0.5
+    pae_weight: 0.5
+mpnn:
+  num_seqs: 8
+  temperature: 0.1
+  weights: soluble
+  rm_aa: "C"
+validation:
+  model: alphafold_single
+  alphafold_model: model_4_ptm
+  num_recycles: 3
+  use_initial_guess: false
+  use_aa_initialization: false
+output:
+  base_dir: results/runs
+  overwrite: false
+  resume: true

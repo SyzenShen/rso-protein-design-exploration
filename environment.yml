@@ -1,0 +1,22 @@
+name: rso-design
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pyyaml
+  - pandas
+  - numpy
+  - scipy
+  - matplotlib
+  - seaborn
+  - biopython
+  - pytest
+  - jupyter
+  - ipywidgets
+  - tqdm
+  - pip:
+    - colabdesign[af,mpnn] @ git+https://github.com/sokrypton/ColabDesign.git@main
+    - transformers
+    - torch
