@@ -4,7 +4,7 @@
   "backbones": {
     "bb0": {
       "status": "rso_done",
-      "final_loss": null,
+      "final_loss": 0.87,
       "length": 100,
       "seed": 42,
       "best_rso_seq": "SEWELAEWDLIEYWWHPFIAAAPFEGWLIIEAIYAARAYGFNPRENWWDRGARLRNKMAMALGQAAVYLALYAETGSIQYLINARYLRIVAAWLQAEINQ",
@@ -97,7 +97,9 @@
           "tm_source": "tmscore_binary",
           "plddt_scale": "colabdesign_native_0_1_x100"
         }
-      ]
+      ],
+      "final_loss_source": "recovered_post_run_from_loss_history_csv",
+      "final_loss_note": "Value=0.87 recovered post-run from stage1_rso/bb0_loss_history.csv (step 99, \"loss\" column). The in-run notebook cell failed to populate this field because ColabDesign exposes the design log via af_model.aux[\"log\"], not the af_model.log attribute the cell probed with hasattr()."
     }
   },
   "stage2_mpnn": {
@@ -111,5 +113,8 @@
     "model": "model_4_ptm",
     "num_recycles": 3,
     "total_validation_seconds": 43.18844246864319
-  }
+  },
+  "final_loss": 0.87,
+  "final_loss_source": "recovered_post_run_from_loss_history_csv",
+  "final_loss_note": "Value=0.87 recovered post-run from stage1_rso/bb0_loss_history.csv (step 99, \"loss\" column). The in-run notebook cell failed to populate this field because ColabDesign exposes the design log via af_model.aux[\"log\"], not the af_model.log attribute the cell probed with hasattr()."
 }

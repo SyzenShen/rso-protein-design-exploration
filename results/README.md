@@ -21,8 +21,15 @@ results/
 
 ## Status
 
-**Pending execution** — No results have been committed yet.
-
-Results (PDBs, FASTAs, CSVs, JSON metadata) will only be committed to this
-repository *after* `scripts/verify_outputs.py` (or equivalent) passes its
-validation checks for reproducibility, format correctness, and sanity metrics.
+**One real run is committed:** `repro_100aa_s42_20260916_140944` (seed 42,
+length 100, Tesla T4, Colab, 2026-09-16). It contains one RSO-designed backbone
+(`bb0`, 100 CA atoms), eight ProteinMPNN candidate sequences (soluble weights,
+T=0.1, `rm_aa="C"`), and eight single-sequence AF2 (`model_4_ptm`, 3 recycles)
+self-consistency validations — all eight succeeded (RMSD 0.509–0.872 Å,
+TM-score 0.9534–0.9816, mean pLDDT 91.60–94.28). The run passed
+`scripts/verify_outputs.py --require-real-metrics` with 0 errors and 0 warnings.
+A single 100-aa end-to-end reproduction of the RSO computational workflow was
+completed; the length experiment (Section 7 of the project README) is not yet
+executed. The AF2 validation model is AlphaFold-derived, the same family that
+drives RSO design, so these metrics are self-consistency scores, not
+independent ground truth.
